@@ -1,0 +1,24 @@
+[Unit]
+Description=LabPortalen application portal
+After=network.target
+
+[Service]
+Type=simple
+User=labportalen
+Group=labportalen
+WorkingDirectory=/opt/labportalen
+# python-dotenv reads /opt/labportalen/.env; do not duplicate secret values here.
+ExecStart=/opt/labportalen/.venv/bin/python -m uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --workers 1 --no-proxy-headers --no-access-log
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/opt/labportalen/data
+RestrictSUIDSGID=true
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

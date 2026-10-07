@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="receipt-heading"><span class="success-symbol" aria-hidden="true">✓</span><p class="eyebrow">ANSØGNINGEN ER MODTAGET</p><h1>Tak. Din sag er oprettet.</h1><p>Gem sagsnummeret og den private kode. De bruges sammen til at se status og beskeder.</p></section>
+<div class="receipt-card card"><div><span class="eyebrow">SAGSNUMMER</span><strong class="case-number" id="receipt-number">{{ case.case_number }}</strong></div><div class="code-block"><label for="receipt-code">Din private statuskode</label><input id="receipt-code" value="{{ tracking_code }}" readonly autocomplete="off" spellcheck="false"><button class="button secondary" type="button" data-copy-target="receipt-code">Kopiér kode</button></div><p class="small">Koden giver adgang til dine sagsoplysninger. Del den ikke med andre. Den vises på denne kvittering og sendes ikke via e-mail.</p><div class="button-row"><a href="/my-case" class="button primary">Åbn din sag →</a><button type="button" class="button secondary" data-print>Udskriv kvittering</button></div></div>
+<div class="narrow-content">{% include 'case_summary.html' %}</div>
+{% endblock %}

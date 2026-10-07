@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+  <div><p class="eyebrow">{{ settings.organization }} / IT-LABORATORIET</p><h1>Dit projekt.<br>Dit virtuelle miljø.</h1><p class="lead">Ansøg om en virtuel maskine eller adgang til vores Proxmox-cluster. Vi samler dit behov, din periode og din godkendelse ét sted.</p><div class="button-row"><a href="/apply" class="button primary">Opret en ansøgning <span aria-hidden="true">↗</span></a><a href="/status" class="button secondary">Se status på din sag</a></div><p class="hero-note">For studerende og undervisere · Behandles af en administrator</p></div>
+  <div class="hero-panel"><p class="eyebrow">ÉN SAMLET ANSØGNING</p><div class="server-stack" aria-hidden="true"><div><span></span><b>COMPUTE</b><i>vCPU</i></div><div><span></span><b>MEMORY</b><i>RAM</i></div><div><span></span><b>STORAGE</b><i>GiB</i></div></div><div class="hero-panel-bottom"><span>Behov → Godkendelse → Levering</span><strong>Proxmox VE</strong></div></div>
+</section>
+<section class="choice-grid" aria-label="Ansøgningstyper">
+  <article class="card choice"><span class="step-number">01</span><h2>En virtuel maskine</h2><p>Vælg operativsystem og version. Angiv vCPU, RAM, storage og hvor længe maskinen skal bruges.</p><a href="/apply">Ansøg om en VM <span aria-hidden="true">→</span></a></article>
+  <article class="card choice"><span class="step-number">02</span><h2>Adgang til clusteret</h2><p>Beskriv hvilke maskiner, ressourcer eller undervisningsmiljøer du skal have adgang til, og hvad du skal kunne gøre.</p><a href="/apply?type=access" data-choose-access>Ansøg om adgang <span aria-hidden="true">→</span></a></article>
+  <article class="card choice muted-card"><span class="step-number">03</span><h2>Følg din sag</h2><p>Du får et sagsnummer og en privat kode. Brug dem til at se afgørelsen og administratorens beskeder.</p><a href="/status">Åbn din sag <span aria-hidden="true">→</span></a></article>
+</section>
+<div class="notice info"><strong>Godkendelse er ikke det samme som oprettelse.</strong> Administratoren behandler først ansøgningen og registrerer derefter, når VM’en eller adgangen er klar.</div>
+{% endblock %}

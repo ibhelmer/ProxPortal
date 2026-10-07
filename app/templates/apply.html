@@ -1,0 +1,30 @@
+{% extends 'base.html' %}{% from 'macros.html' import field, select, textarea with context %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">ANSØGNING / NY SAG</p><h1>Hvad har du brug for?</h1><p>Beskriv dit behov, så administratoren kan vurdere din ansøgning. Felter med * skal udfyldes.</p></div><a href="/status" class="text-link">Har du allerede en sag? →</a></div>
+{% if errors %}<div class="notice danger" role="alert"><strong>Ansøgningen er ikke sendt endnu.</strong> Ret de markerede felter.{% for name, message in errors.items() %}<div><a href="#{{ name }}">{{ message }}</a></div>{% endfor %}</div>{% endif %}
+<form method="post" action="/apply" id="application-form" class="application-layout">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}"><input type="hidden" name="submission_token" value="{{ submission_token }}">
+  <div class="form-sections">
+    <section class="card form-section"><div class="section-heading"><span class="step-number">01</span><div><h2>Om dig</h2><p>Kontaktoplysninger og tilknytning</p></div></div>
+      <div class="form-grid">{{ select('applicant_role', 'Jeg er', roles, values, errors, true) }}{{ field('applicant_name', 'Navn på ansøger', values, errors, required=true, maxlength=120, placeholder='Fornavn og efternavn') }}
+      <div id="class-section">{{ field('class_name', 'Klasse / hold', values, errors, maxlength=60, placeholder='F.eks. itt-csd-s26', help='Skal udfyldes af studerende.') }}</div>{{ field('email', 'E-mail', values, errors, type='email', required=true, maxlength=254, placeholder='Din studie- eller arbejdsmail', help='Brug den adresse, administratoren kan kontakte dig på.') }}</div>
+    </section>
+    <section class="card form-section"><div class="section-heading"><span class="step-number">02</span><div><h2>Dit behov</h2><p>Ressourcer og formål</p></div></div>
+      {{ select('request_type', 'Jeg ansøger om', request_types, values, errors, true) }}
+      {{ field('title', 'Kort titel', values, errors, required=true, maxlength=160, placeholder='F.eks. Linux-server til netværksprojekt') }}
+      {{ textarea('purpose', 'Hvad skal miljøet bruges til?', values, errors, true, 'Beskriv fag, projekt og formål. Skriv ikke adgangskoder, CPR-numre eller følsomme personoplysninger.') }}
+      <fieldset id="vm-section" class="nested-section"><legend>Specifikationer for VM</legend><div class="form-grid">{{ select('os_family', 'Operativsystem', os_families, values, errors) }}{{ field('os_version', 'Version / udgave', values, errors, maxlength=120, placeholder='Version, udgave og evt. desktop/server', help='Ved ”Andet” angives også operativsystemets navn.') }}</div>
+      <div class="form-grid thirds">{{ field('cpu_cores', 'CPU-kerner (vCPU)', values, errors, type='number', min=1, max=settings.max_vcpu) }}{{ field('ram_gib', 'RAM (GiB)', values, errors, type='number', min=1, max=settings.max_ram_gib) }}{{ field('storage_gib', 'Storage (GiB)', values, errors, type='number', min=1, max=settings.max_storage_gib) }}</div>
+      <p class="hint">GiB er den enhed, der bruges i denne portal. Tallene er dit ønskede omfang, ikke en garanti for ledig kapacitet.</p></fieldset>
+      <fieldset id="access-section" class="nested-section"><legend>Ønsket adgang</legend>{{ textarea('access_scope', 'Hvilken adgang har du brug for?', values, errors, help='Angiv f.eks. undervisningsmiljø, eksisterende VM’er eller pool, og om du skal kunne se, starte, stoppe eller administrere dem. Bed kun om de nødvendige rettigheder.', maxlength=2000) }}</fieldset>
+    </section>
+    <section class="card form-section"><div class="section-heading"><span class="step-number">03</span><div><h2>Periode</h2><p>Hvornår skal miljøet bruges?</p></div></div>
+      <div class="form-grid">{{ field('starts_on', 'Ønsket startdato', values, errors, type='date', required=true, min=today.isoformat()) }}{{ field('ends_on', 'Ønsket slutdato', values, errors, type='date', required=true, min=today.isoformat()) }}</div>
+      <p class="hint">Slutdatoen er inklusive. Perioden slutter ved udgangen af dagen i dansk tid. Højst {{ settings.max_duration_days }} dage pr. ny ansøgning.</p>
+      <div class="check-panel"><label class="checkbox-label" for="acknowledge"><input id="acknowledge" name="acknowledge" type="checkbox" value="yes" {% if values.get('acknowledge') == 'yes' %}checked{% endif %} required><span>Jeg bekræfter, at oplysningerne er korrekte, og at jeg har læst <a href="/privacy" target="_blank" rel="noopener">informationen om registrering af oplysninger</a>. Jeg er bekendt med, at ansøgningen skal godkendes.</span></label><span id="acknowledge-error" class="field-error">{{ errors.get('acknowledge', '') }}</span></div>
+      <button type="submit" class="button primary full-width" data-submit-once>Send ansøgning <span aria-hidden="true">→</span></button>
+    </section>
+  </div>
+  <aside class="application-sidebar"><div class="card summary-card"><p class="eyebrow">DIT OVERBLIK</p><h2 id="summary-type">Virtuel maskine</h2><dl class="summary-list"><div id="summary-cpu-row"><dt>CPU</dt><dd id="summary-cpu">2 vCPU</dd></div><div id="summary-ram-row"><dt>RAM</dt><dd id="summary-ram">4 GiB</dd></div><div id="summary-storage-row"><dt>Storage</dt><dd id="summary-storage">40 GiB</dd></div><div><dt>Periode</dt><dd id="summary-duration">90 dage</dd></div></dl><hr><p class="small">Du får sagsnummer og privat statuskode på skærmen, når ansøgningen er modtaget. Gem begge dele.</p><span class="badge status-pending">Afventer godkendelse</span></div><div class="sidebar-help"><h3>Hvad sker der bagefter?</h3><p>En administrator gennemgår dit behov og kontrollerer din tilknytning. Når miljøet er klar, bliver sagen markeret som leveret.</p><p>Der sendes ikke automatiske e-mails i denne version. Følg sagen her i portalen.</p></div></aside>
+</form>
+{% endblock %}

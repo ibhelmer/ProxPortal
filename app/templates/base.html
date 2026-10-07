@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#004250">
+  <meta name="description" content="ProxPortal: ansøg om virtuelle maskiner og adgang til UCNs Proxmox-cluster.">
+  <link rel="icon" href="/favicon.ico?v={{ version }}" type="image/x-icon" sizes="16x16 32x32 48x48">
+  <meta name="robots" content="noindex,nofollow">
+  <title>{{ page_title }} · {{ settings.portal_name }}</title>
+  <link rel="stylesheet" href="/static/style.css?v={{ version }}">
+  <script src="/static/app.js?v={{ version }}" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Gå til indhold</a>
+<header class="topbar">
+  <div class="nav-wrap">
+    <a class="brand" href="/" aria-label="{{ settings.portal_name }} forside"><img class="brand-logo" src="/static/ucn-logo.svg?v={{ version }}" alt="UCN — Professionshøjskolen" width="260" height="40"><span class="brand-title">{{ settings.portal_name }}<small>Virtuelle læringsmiljøer</small></span></a>
+    <nav aria-label="Hovednavigation">
+      <a href="/apply" {% if request.url.path == '/apply' %}aria-current="page"{% endif %}>Ny ansøgning</a>
+      <a href="/status" {% if request.url.path in ['/status','/my-case'] %}aria-current="page"{% endif %}>Følg din sag</a>
+      {% if admin %}<a href="/admin" class="nav-admin">Administration</a><form method="post" action="/admin/logout" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button class="nav-button" type="submit">Log ud</button></form>
+      {% else %}<a href="/admin/login" class="nav-admin">Administrator</a>{% endif %}
+    </nav>
+  </div>
+</header>
+<main id="main" class="container {% block main_class %}{% endblock %}">
+  {% if settings.environment != 'production' %}<div class="environment">TEST / LOKAL OPSÆTNING <span>Brug ikke rigtige personoplysninger før HTTPS og driftsopsætningen er klar.</span></div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+<footer class="footer"><span>{{ settings.organization }} · © 2026 Ib Helmer Nielsen · {{ settings.portal_name }} {{ version }}</span><div><a href="/privacy">Oplysninger og privatliv</a><a href="/about">Om portalen</a></div></footer>
+</body>
+</html>

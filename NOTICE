@@ -1,0 +1,13 @@
+ProxPortal 1.1.0
+Copyright 2026 Ib Helmer Nielsen
+
+Licensed under the Apache License, Version 2.0.
+This application is not an official Proxmox product and is not affiliated with Proxmox Server Solutions GmbH.
+The organization name shown in the UI is configurable. UCN branding is included at the project owner's request; no institutional approval is implied.
+Third-party libraries are distributed under their respective licenses.
+
+Brand assets (not Apache-2.0):
+- app/static/ucn-logo.svg: UCN logo converted from the existing UCN presentation template. UCN retains rights to its logo and trademarks.
+- app/static/favicon.ico: icon supplied for this project, losslessly re-encoded with identical RGBA pixels at all three original sizes. No additional licence is granted here.
+The software licence does not grant trademark rights or imply institutional endorsement.
+See docs/BRANDING.md for provenance.

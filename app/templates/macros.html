@@ -1,0 +1,20 @@
+{% macro field(name, label, values, errors, type='text', required=false, placeholder='', help='', min='', max='', maxlength='') %}
+<div class="field">
+  <label for="{{ name }}">{{ label }}{% if required %}<span class="required" aria-hidden="true"> *</span>{% endif %}</label>
+  <input id="{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ values.get(name, '') }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %} {% if min != '' %}min="{{ min }}"{% endif %} {% if max != '' %}max="{{ max }}"{% endif %} {% if maxlength != '' %}maxlength="{{ maxlength }}"{% endif %} {% if type == 'number' %}step="1"{% endif %} aria-describedby="{{ name }}-help {{ name }}-error" {% if errors.get(name) %}aria-invalid="true"{% endif %}>
+  <small id="{{ name }}-help">{{ help }}</small>
+  <span id="{{ name }}-error" class="field-error">{{ errors.get(name, '') }}</span>
+</div>
+{% endmacro %}
+{% macro select(name, label, choices, values, errors, required=false, empty='Vælg …') %}
+<div class="field"><label for="{{ name }}">{{ label }}{% if required %}<span class="required" aria-hidden="true"> *</span>{% endif %}</label>
+<select id="{{ name }}" name="{{ name }}" {% if required %}required{% endif %} aria-describedby="{{ name }}-error" {% if errors.get(name) %}aria-invalid="true"{% endif %}>
+<option value="">{{ empty }}</option>{% for key, label in choices.items() %}<option value="{{ key }}" {% if values.get(name) == key %}selected{% endif %}>{{ label }}</option>{% endfor %}
+</select><span id="{{ name }}-error" class="field-error">{{ errors.get(name, '') }}</span></div>
+{% endmacro %}
+{% macro textarea(name, label, values, errors, required=false, help='', maxlength=4000) %}
+<div class="field"><label for="{{ name }}">{{ label }}{% if required %}<span class="required" aria-hidden="true"> *</span>{% endif %}</label>
+<textarea id="{{ name }}" name="{{ name }}" rows="4" maxlength="{{ maxlength }}" {% if required %}required{% endif %} aria-describedby="{{ name }}-help {{ name }}-error" {% if errors.get(name) %}aria-invalid="true"{% endif %}>{{ values.get(name, '') }}</textarea>
+<small id="{{ name }}-help">{{ help }}</small><span id="{{ name }}-error" class="field-error">{{ errors.get(name, '') }}</span></div>
+{% endmacro %}
+{% macro badge(case) %}<span class="badge status-{{ case.status }}">{{ statuses[case.status] }}</span>{% if case.archived_at %}<span class="badge status-archived">Arkiveret</span>{% endif %}{% if case.overdue %}<span class="badge status-overdue">Udløbet · afvikling mangler</span>{% elif case.soon %}<span class="badge status-soon">Udløber snart</span>{% endif %}{% endmacro %}
