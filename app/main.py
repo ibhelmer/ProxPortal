@@ -118,7 +118,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                                     secure=settings.secure_cookies, httponly=True, samesite="lax")
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
-        response.headers["Referrer-Policy"] = "no-referrer"
+        # Preserve Origin on same-origin HTML POST forms; no cross-origin Referer is shared.
+        response.headers["Referrer-Policy"] = "same-origin"
         response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; "
