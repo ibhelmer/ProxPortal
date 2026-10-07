@@ -18,6 +18,7 @@
     <a class="brand" href="/" aria-label="{{ settings.portal_name }} forside"><img class="brand-logo" src="/static/ucn-logo.svg?v={{ version }}" alt="UCN — Professionshøjskolen" width="260" height="40"><span class="brand-title">{{ settings.portal_name }}<small>Virtuelle læringsmiljøer</small></span></a>
     <nav aria-label="Hovednavigation">
       <a href="/apply" {% if request.url.path == '/apply' %}aria-current="page"{% endif %}>Ny ansøgning</a>
+      <a href="/about" {% if request.url.path == '/about' %}aria-current="page"{% endif %}>Om og regler</a>
       <a href="/status" {% if request.url.path in ['/status','/my-case'] %}aria-current="page"{% endif %}>Følg din sag</a>
       {% if admin %}<a href="/admin" class="nav-admin">Administration</a><form method="post" action="/admin/logout" class="inline"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button class="nav-button" type="submit">Log ud</button></form>
       {% else %}<a href="/admin/login" class="nav-admin">Administrator</a>{% endif %}

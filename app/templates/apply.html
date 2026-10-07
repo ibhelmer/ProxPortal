@@ -8,6 +8,10 @@
     <section class="card form-section"><div class="section-heading"><span class="step-number">01</span><div><h2>Om dig</h2><p>Kontaktoplysninger og tilknytning</p></div></div>
       <div class="form-grid">{{ select('applicant_role', 'Jeg er', roles, values, errors, true) }}{{ field('applicant_name', 'Navn på ansøger', values, errors, required=true, maxlength=120, placeholder='Fornavn og efternavn') }}
       <div id="class-section">{{ field('class_name', 'Klasse / hold', values, errors, maxlength=60, placeholder='F.eks. itt-csd-s26', help='Skal udfyldes af studerende.') }}</div>{{ field('email', 'E-mail', values, errors, type='email', required=true, maxlength=254, placeholder='Din studie- eller arbejdsmail', help='Brug den adresse, administratoren kan kontakte dig på.') }}</div>
+      <div class="field"><label for="additional_students">Yderligere studerende på samme ansøgning (valgfrit)</label>
+      <textarea id="additional_students" name="additional_students" maxlength="2400" rows="4" placeholder="Anna Jensen; anna@example.org; itt-csd-s26&#10;Bo Hansen; bo@example.org; itt-csd-s26">{{ values.get('additional_students', '') }}</textarea>
+      <small>Én pr. linje: Navn; e-mail; klasse. Højst 15 ekstra studerende. Kun hovedansøgeren kan følge og ansøge om forlængelse af sagen. Dette giver ikke automatisk Proxmox-adgang.</small>
+      <span class="field-error" id="additional_students-error">{{ errors.get('additional_students', '') }}</span></div>
     </section>
     <section class="card form-section"><div class="section-heading"><span class="step-number">02</span><div><h2>Dit behov</h2><p>Ressourcer og formål</p></div></div>
       {{ select('request_type', 'Jeg ansøger om', request_types, values, errors, true) }}
@@ -21,7 +25,7 @@
     <section class="card form-section"><div class="section-heading"><span class="step-number">03</span><div><h2>Periode</h2><p>Hvornår skal miljøet bruges?</p></div></div>
       <div class="form-grid">{{ field('starts_on', 'Ønsket startdato', values, errors, type='date', required=true, min=today.isoformat()) }}{{ field('ends_on', 'Ønsket slutdato', values, errors, type='date', required=true, min=today.isoformat()) }}</div>
       <p class="hint">Slutdatoen er inklusive. Perioden slutter ved udgangen af dagen i dansk tid. Højst {{ settings.max_duration_days }} dage pr. ny ansøgning.</p>
-      <div class="check-panel"><label class="checkbox-label" for="acknowledge"><input id="acknowledge" name="acknowledge" type="checkbox" value="yes" {% if values.get('acknowledge') == 'yes' %}checked{% endif %} required><span>Jeg bekræfter, at oplysningerne er korrekte, og at jeg har læst <a href="/privacy" target="_blank" rel="noopener">informationen om registrering af oplysninger</a>. Jeg er bekendt med, at ansøgningen skal godkendes.</span></label><span id="acknowledge-error" class="field-error">{{ errors.get('acknowledge', '') }}</span></div>
+      <div class="check-panel"><label class="checkbox-label" for="acknowledge"><input id="acknowledge" name="acknowledge" type="checkbox" value="yes" {% if values.get('acknowledge') == 'yes' %}checked{% endif %} required><span>Jeg bekræfter, at oplysningerne er korrekte, at eventuelle tilknyttede studerende er informeret om registreringen, og at jeg har læst <a href="/privacy" target="_blank" rel="noopener">informationen om registrering af oplysninger</a>. Jeg er bekendt med, at ansøgningen skal godkendes.</span></label><span id="acknowledge-error" class="field-error">{{ errors.get('acknowledge', '') }}</span></div>
       <button type="submit" class="button primary full-width" data-submit-once>Send ansøgning <span aria-hidden="true">→</span></button>
     </section>
   </div>

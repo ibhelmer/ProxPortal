@@ -98,6 +98,10 @@ def submit_case(db: Database, settings, data: dict, nonce: str):
         cursor = conn.execute(f"INSERT INTO cases ({','.join(allowed)}) VALUES ({','.join('?' for _ in allowed)})",
                               [record[key] for key in allowed])
         case_id = cursor.lastrowid
+        for student in data.get("participants", []):
+            conn.execute("""INSERT INTO case_participants(case_id,student_name,student_email,class_name,created_at)
+                            VALUES (?,?,?,?,?)""",
+                         (case_id, student["name"], student["email"], student["class_name"], created))
         event(conn, case_id, None, "submitted", None, "pending", "Ansøgningen er modtaget og afventer behandling.")
         row = conn.execute("SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
         return dict(row), code, True
@@ -111,7 +115,13 @@ def case_by_id(db: Database, case_id: int, today: date):
         events = [dict(r) for r in conn.execute("SELECT * FROM case_events WHERE case_id=? ORDER BY id DESC", (case_id,))]
         for item in events:
             item["details"] = json.loads(item["details_json"])
-        return enrich(row, today), events
+        case = enrich(row, today)
+        case["participants"] = [dict(r) for r in conn.execute("""SELECT student_name,student_email,class_name
+            FROM case_participants WHERE case_id=? ORDER BY id""", (case_id,))]
+        case["lease_requests"] = [dict(r) for r in conn.execute("""SELECT * FROM lease_extension_requests
+            WHERE case_id=? ORDER BY id DESC""", (case_id,))]
+        case["pending_lease"] = next((r for r in case["lease_requests"] if r["status"] == "pending"), None)
+        return case, events
 
 
 def find_status_case(db: Database, number: str, code: str):
@@ -150,6 +160,9 @@ def change_case(db: Database, settings, case_id: int, actor: dict, form: dict):
             raise CaseError("Sagen er ændret siden siden blev åbnet. Genindlæs og kontrollér oplysningerne før du fortsætter.", 409)
         if row["archived_at"] and action != "restore":
             raise CaseError("Sagen er arkiveret og skrivebeskyttet. Hent den først fra arkivet.", 409)
+        if action in {"extend", "close"} and conn.execute(
+                "SELECT 1 FROM lease_extension_requests WHERE case_id=? AND status='pending'", (case_id,)).fetchone():
+            raise CaseError("Behandl den afventende forlængelsesanmodning før direkte forlængelse eller afslutning.", 409)
         changes, details = {}, {}
         old_status = row["status"]
         new_status = old_status
@@ -287,7 +300,7 @@ def list_cases(db, settings, query, export=False):
             raise CaseError("Eksporten er begrænset til 10.000 sager. Afgræns først med filtre.")
         limit = 10000 if export else settings.page_size
         offset = 0 if export else (page - 1) * settings.page_size
-        rows = conn.execute(f"SELECT * FROM cases WHERE {where} ORDER BY id DESC LIMIT ? OFFSET ?", [*params, limit, offset]).fetchall()
+        rows = conn.execute(f"SELECT cases.*, EXISTS (SELECT 1 FROM lease_extension_requests lr WHERE lr.case_id=cases.id AND lr.status='pending') AS has_pending_lease FROM cases WHERE {where} ORDER BY id DESC LIMIT ? OFFSET ?", [*params, limit, offset]).fetchall()
         return {"cases": [enrich(r, today) for r in rows], "total": count, "page": page, "pages": pages, "filters": filters}
 
 
@@ -304,7 +317,10 @@ def dashboard_stats(db, settings):
         resources = dict(conn.execute("""SELECT coalesce(sum(cpu_cores),0) AS cpu, coalesce(sum(ram_gib),0) AS ram,
             coalesce(sum(storage_gib),0) AS storage FROM cases
             WHERE status IN ('approved','active') AND archived_at IS NULL AND request_type='vm'""").fetchone())
-    return {k: v or 0 for k, v in stats.items()}, resources
+        pending_extensions = conn.execute("SELECT count(*) FROM lease_extension_requests WHERE status='pending'").fetchone()[0]
+    stats = {k: v or 0 for k, v in stats.items()}
+    stats["pending_extensions"] = pending_extensions
+    return stats, resources
 
 
 def export_csv(rows):
@@ -326,3 +342,79 @@ def export_csv(rows):
                   row["assigned_account"], row["assigned_address"], row["created_at"]]
         writer.writerow([safe(v) for v in values])
     return "\ufeff" + stream.getvalue()
+
+
+def request_lease_extension(db: Database, settings, case_id: int, form: dict):
+    """Applicant with an authorized status session may request, never approve, a lease extension."""
+    try:
+        proposed = date.fromisoformat(form.get("new_ends_on", ""))
+        if proposed.isoformat() != form.get("new_ends_on", ""):
+            raise ValueError
+    except (TypeError, ValueError):
+        raise CaseError("Angiv en gyldig ny slutdato.") from None
+    try:
+        reason = text(form.get("reason", ""), 1600)
+    except ValueError as exc:
+        raise CaseError(str(exc)) from None
+    if len(reason) < 10:
+        raise CaseError("Begrundelsen skal være mindst 10 tegn.")
+    with db.write() as conn:
+        case = conn.execute("SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
+        if not case:
+            raise CaseError("Sagen findes ikke.", 404)
+        if case["archived_at"] or case["status"] not in {"approved", "active"}:
+            raise CaseError("Der kan kun søges om forlængelse af godkendte eller aktive tildelinger.", 409)
+        today = local_today(settings)
+        if proposed <= date.fromisoformat(case["ends_on"]) or proposed <= today:
+            raise CaseError("Ny slutdato skal ligge efter gældende slutdato og i fremtiden.")
+        if (proposed - today).days > settings.max_duration_days:
+            raise CaseError(f"Ny slutdato må højst ligge {settings.max_duration_days} dage fremme.")
+        if conn.execute("SELECT 1 FROM lease_extension_requests WHERE case_id=? AND status='pending'", (case_id,)).fetchone():
+            raise CaseError("Der afventer allerede en forlængelsesanmodning.", 409)
+        conn.execute("""INSERT INTO lease_extension_requests(case_id,proposed_ends_on,reason,created_at)
+                        VALUES (?,?,?,?)""", (case_id, proposed.isoformat(), reason, now_iso()))
+        conn.execute("UPDATE cases SET version=version+1,updated_at=? WHERE id=?", (now_iso(), case_id))
+        event(conn, case_id, None, "lease_requested", case["status"], case["status"],
+              "Der er ansøgt om forlængelse til " + proposed.isoformat() + ".", details={"Ønsket slutdato": proposed.isoformat()})
+
+
+def decide_lease_extension(db: Database, settings, case_id: int, actor: dict, form: dict):
+    """Admin-only decision; updates lease end only when approved, all within one write tx."""
+    try:
+        version = int(form.get("version", ""))
+        lease_id = int(form.get("lease_id", ""))
+        decision = form.get("decision", "")
+        note = text(form.get("decision_note", ""), 1600)
+    except (ValueError, TypeError) as exc:
+        raise CaseError("Ugyldig beslutning eller meddelelse.") from exc
+    if decision not in {"approve", "reject"} or len(note) < 3:
+        raise CaseError("Vælg beslutning og skriv mindst tre tegn som begrundelse.")
+    with db.write() as conn:
+        if not conn.execute("SELECT 1 FROM admins WHERE id=? AND is_active=1", (actor["id"],)).fetchone():
+            raise CaseError("Administratoradgangen er ikke aktiv.", 403)
+        case = conn.execute("SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
+        if not case:
+            raise CaseError("Sagen findes ikke.", 404)
+        if case["version"] != version:
+            raise CaseError("Sagen er ændret. Genindlæs og kontrollér før afgørelse.", 409)
+        if case["archived_at"] or case["status"] not in {"approved", "active"}:
+            raise CaseError("Sagens status tillader ikke denne afgørelse.", 409)
+        lease = conn.execute("""SELECT * FROM lease_extension_requests
+            WHERE id=? AND case_id=? AND status='pending'""", (lease_id, case_id)).fetchone()
+        if not lease:
+            raise CaseError("Forlængelsesanmodningen er allerede behandlet eller findes ikke.", 409)
+        if decision == "approve":
+            proposed = date.fromisoformat(lease["proposed_ends_on"])
+            today = local_today(settings)
+            if proposed <= date.fromisoformat(case["ends_on"]) or proposed <= today or (proposed - today).days > settings.max_duration_days:
+                raise CaseError("Den anmodede periode kan ikke længere godkendes. Afvis anmodningen og bed om en ny.", 409)
+            conn.execute("UPDATE cases SET ends_on=?,version=version+1,updated_at=?,public_message=? WHERE id=?",
+                         (proposed.isoformat(), now_iso(), note, case_id))
+        else:
+            conn.execute("UPDATE cases SET version=version+1,updated_at=?,public_message=? WHERE id=?",
+                         (now_iso(), note, case_id))
+        target_status = "approved" if decision == "approve" else "rejected"
+        conn.execute("""UPDATE lease_extension_requests SET status=?,decided_by=?,decided_at=?,decision_note=?
+                        WHERE id=? AND status='pending'""", (target_status, actor["id"], now_iso(), note, lease_id))
+        event(conn, case_id, actor, "lease_approved" if decision == "approve" else "lease_rejected",
+              case["status"], case["status"], note, details={"Ønsket slutdato": lease["proposed_ends_on"]})

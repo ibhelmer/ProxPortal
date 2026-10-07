@@ -1,4 +1,4 @@
-# ProxPortal 1.1.1
+# ProxPortal 1.2.0
 
 **Webbaseret ansøgning, godkendelse og arkivering af virtuelle undervisningsmiljøer.**
 
@@ -7,6 +7,16 @@ Copyright © 2026 Ib Helmer Nielsen. Apache License 2.0.
 Studerende og undervisere kan ansøge om en virtuel maskine eller adgang til et Proxmox-cluster. Administratorer kan behandle sager, registrere levering, følge op på udløb og arkivere afsluttede eller afviste ansøgninger.
 
 Brugerfladen og denne dokumentation er på dansk. Kode, funktionsnavne og kodekommentarer er på engelsk.
+
+## Nyt i 1.2.0
+
+- Synlig **Om og regler**-knap med brugsvejledning og forslag til lokale laboratorieregler, der skal godkendes af UCN.
+- **Op til 15 yderligere studerende** på én ansøgning: én linje pr. person i formatet `Navn; e-mail; klasse`. Tilknytning giver ikke automatisk rettigheder.
+- **Ansøgning om forlængelse af lease** via »Følg din sag« for godkendte/aktive tildelinger. Administrator godkender eller afviser; perioden ændres kun ved godkendelse.
+- Forlængelsesanmodninger markeres i administratoroversigten. Beslutninger gemmes i sagens historik.
+- Ny fremadrettet SQLite-migration. Eksisterende sagsnumre, brugere og data bevares.
+
+Se [funktioner og opgradering](docs/FEATURES_1_2.md). Tag backup inden en opdatering af installationen.
 
 ## Hvad følger med?
 

@@ -1,1 +1,29 @@
-{% extends 'base.html' %}{% block content %}<article class="card prose"><p class="eyebrow">OM SYSTEMET</p><h1>{{ settings.portal_name }}</h1><p class="lead">En ansøgnings- og sagsportal til virtuelle undervisningsmiljøer.</p><h2>Formål</h2><p>Studerende og undervisere kan ansøge om en VM eller Proxmox-adgang. Administratorer kan behandle ansøgninger, registrere levering, følge op på udløb og arkivere afsluttede eller afviste sager.</p><h2>Teknologi</h2><p>Python, FastAPI, Uvicorn, Jinja2 og SQLite. Brugerfladen anvender lokal HTML, CSS og JavaScript uden eksterne skrifttyper, analyseværktøjer eller CDN-afhængigheder.</p><h2>Afgrænsning</h2><p>Version {{ version }} har ingen automatisk VM-oprettelse, adgangstildeling, sletning, e-mailafsendelse eller institutionslogin. Der foretages ingen kald til Proxmox. Systemet registrerer ansøgninger og administratorens handlinger.</p><h2>Copyright og licens</h2><p>Copyright © 2026 Ib Helmer Nielsen. Kildekoden leveres under Apache License 2.0. Afhængigheder har deres egne licenser.</p><p class="small">Brugerfladen anvender UCN-logo og farver fra UCN 2022-temaet i den anvendte UCN-skabelon. Favicon er leveret til projektet. Logo og favicon er ikke omfattet af kildekodens Apache-licens. Branding er ikke en godkendelse eller certificering fra UCN.</p></article>{% endblock %}
+{% extends 'base.html' %}{% block content %}
+<article class="card prose">
+<p class="eyebrow">OM PROXPORTAL · VEJLEDNING OG BRUGSREGLER</p>
+<h1>Om ProxPortal</h1>
+<p class="lead">ProxPortal bruges af studerende og undervisere til at søge om en virtuel maskine eller adgang til undervisningens Proxmox-miljø. Ansøgningen skal godkendes, før ressourcen kan tages i brug.</p>
+<h2>Sådan bruger du portalen</h2>
+<ol><li><strong>Opret en ansøgning:</strong> Oplys rolle, kontakt, eventuelt hold, formål og ønsker til OS, CPU, RAM, storage eller adgang. Angiv start- og slutdato.</li>
+<li><strong>Tilføj projektgruppen:</strong> Du kan anføre op til 15 ekstra studerende med navn, e-mail og hold. Informér dem om registreringen. Hovedansøgeren har ansvaret for sagsopfølgning; medstuderende får ikke automatisk login eller Proxmox-rettigheder.</li>
+<li><strong>Gem kvitteringen:</strong> Sagsnummer og privat statuskode skal opbevares sikkert. Koden giver adgang til sagens oplysninger og kan bruges til at anmode om forlængelse.</li>
+<li><strong>Afvent godkendelse:</strong> Administratoren vurderer behov, kapacitet, identitet og rettigheder. Godkendelse er ikke det samme som automatisk oprettelse.</li>
+<li><strong>Ansøg om forlængelse:</strong> Åbn din sag under »Følg din sag«, og vælg »Send ansøgning om forlængelse«. Administratoren afgør anmodningen, inden slutdatoen ændres.</li>
+<li><strong>Afslut arbejdet:</strong> Aftal afvikling inden den godkendte slutdato. Ressourcer lukkes ikke automatisk af portalen.</li></ol>
+<h2>Foreslåede retningslinjer for anvendelse</h2>
+<div class="notice warning"><strong>Forslag til lokale laboratorieregler – ikke officielt vedtagne UCN-regler.</strong> Den ansvarlige for UCN-miljøet skal gennemgå, godkende og tilpasse punkterne før anvendelse som bindende politik. UCN’s eksisterende IT- og sikkerhedsregler gælder fortsat.</div>
+<ul><li>Brug kun ressourcerne til godkendte undervisnings-, lærings-, prøve- eller projektaktiviteter inden for ansøgningens formål.</li>
+<li>Brug kun de tildelte ressourcer og rettigheder. Del ikke adgangskoder, personlige konti, tokens eller statuskoder.</li>
+<li>Sikkerhedsøvelser, penetrationstest og malwareanalyser må kun udføres inden for udtrykkeligt godkendte og passende isolerede testmiljøer. Ingen scanning eller angreb mod UCN’s øvrige systemer eller internettets værter uden særskilt tilladelse.</li>
+<li>Undlad kryptomining, kommerciel hosting, spam, ulovlig aktivitet og tjenester, der belaster netværk eller fælles kapacitet uden godkendelse.</li>
+<li>Opbevar ikke CPR-numre, patient-/helbredsoplysninger, autentifikationshemmeligheder eller andre følsomme data i VM’en uden en særskilt godkendt løsning.</li>
+<li>Hold systemet opdateret, brug nødvendige sikkerhedsforanstaltninger, og meld hændelser eller fejl til administratoren.</li>
+<li>Overhold tildelt CPU, RAM, storage og leaseperiode. Forlængelse skal ansøges og godkendes; data og VM’er kan blive afviklet efter gældende driftsprocedure.</li>
+<li>Tag selv ansvar for nødvendige sikkerhedskopier af projektdata efter aftale med administratoren. Tildelingen garanterer ikke automatisk backup.</li></ul>
+<h2>Kontakt, godkendelse og personoplysninger</h2>
+<p>Kun administratorer kan godkende ansøgninger og registrere levering. Alle tilknyttede studerende bør informeres om, at deres navn, e-mail og klasse gemmes på sagen. Kun hovedansøgerens private kode giver sagsadgang i denne version.</p>
+<p><a href="/privacy">Læs hvordan portalen registrerer oplysninger →</a></p>
+<p>Spørgsmål eller særlig tilladelse rettes til {% if settings.support_email %}<strong>{{ settings.support_email }}</strong>{% else %}institutionens ansvarlige IT-administrator{% endif %}.</p>
+<h2>Teknisk afgrænsning</h2><p>ProxPortal {{ version }} administrerer ansøgninger og godkendelser, ingen automatisk VM-oprettelse, brugeroprettelse, afvikling eller e-mailnotifikationer i Proxmox.</p>
+<p class="small">Copyright © 2026 Ib Helmer Nielsen. Kildekoden er Apache 2.0; UCN-logo og favicon er særskilte brandaktiver og ikke omfattet af kildekodens Apache-licens.</p>
+</article>{% endblock %}

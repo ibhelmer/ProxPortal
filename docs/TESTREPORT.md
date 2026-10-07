@@ -1,4 +1,4 @@
-# ProxPortal 1.1.0 — testrapport
+# ProxPortal 1.1.0–1.2.0 — testrapport
 
 Kørt 7. oktober 2026 i det lokale leverancemiljø med Python 3.13.
 
@@ -37,3 +37,10 @@ Skærmbillederne fra den tidligere LabPortalen-udgave er ikke publiceret som dok
 Docker-build, produktions-TLS, installation på institutionens VM, institutionslogin, Proxmox-integration, belastningstest og en ekstern sikkerhedsrevision er ikke gennemført. Proxmox-API-integration og institutionslogin er fortsat ikke implementeret.
 
 Kør tests og en reel browser-accepttest efter installation, og afprøv backup/gendannelse på en kopi, før systemet bruges med personoplysninger.
+
+
+## Udvidelser i version 1.2.0
+
+De nye funktioner er afprøvet i en separat lokal FastAPI/SQLite-testkopi. **78 tests bestod i dette miljø**, dækkende den oprindelige funktionssuite og nye tests for gruppemedlemmer, ugyldige eller gentagne e-mailadresser, ansøgerstatus, forlængelsesbeslutninger, adgangskontrol, versionskonflikt og migration 002. Testkopien indeholdt ikke alle særskilte UCN-brandingtests fra den tidligere GitHub-udgave; de skal køres samlet efter checkout fra `main`.
+
+Bemærk: Docker-build, institutionens HTTPS-miljø og opdatering af en database med eksisterende personoplysninger er ikke blevet testet her. Tag backup og kør en fuld accepttest ved implementering.

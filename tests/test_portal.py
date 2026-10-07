@@ -299,7 +299,7 @@ def test_backup_integrity_and_migration_are_non_destructive(client, settings, db
         assert conn.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
         assert conn.execute("SELECT case_number FROM cases").fetchone()[0] == case["case_number"]
         assert conn.execute("SELECT count(*) FROM web_sessions").fetchone()[0] == 0
-        assert conn.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 1
+        assert conn.execute("SELECT count(*) FROM schema_migrations").fetchone()[0] == 2
     with pytest.raises(FileExistsError):
         db.backup(backup)
 

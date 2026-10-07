@@ -2,4 +2,16 @@
 {% block content %}<div class="page-heading"><div><p class="eyebrow">DIN SAG</p><h1>{{ case.case_number }}</h1><div class="badge-row">{{ badge(case) }}</div></div><form method="post" action="/status/forget"><input type="hidden" name="csrf_token" value="{{ csrf }}"><button class="button secondary" type="submit">Luk min sag</button></form></div>
 {% if case.overdue %}<div class="notice warning"><strong>Den registrerede periode er udløbet.</strong> Kontakt administratoren om afvikling eller en eventuel forlængelse. Denne markering ændrer ikke i sig selv VM’en eller adgangen.</div>{% endif %}
 {% if case.public_message %}<div class="notice info"><strong>Seneste meddelelse fra administratoren</strong><p class="preline">{{ case.public_message }}</p></div>{% endif %}
+{% if request.query_params.get('lease_submitted') == '1' %}<div class="notice success" role="status">Din ansøgning om forlængelse er registreret. Administratoren skal tage stilling.</div>{% endif %}
+{% if lease_error %}<div class="notice danger" role="alert">{{ lease_error }}</div>{% endif %}
+{% if case.status in ('approved', 'active') and not case.archived_at %}
+<section class="card form-section lease-request-card"><h2>Ansøg om forlængelse af lease</h2>
+{% if case.pending_lease %}<p>Der afventer allerede en forlængelsesanmodning til <strong>{{ case.pending_lease.proposed_ends_on|dkdate }}</strong>. Administratoren skal behandle den først.</p>
+{% else %}<p>Aktuel slutdato: <strong>{{ case.ends_on|dkdate }}</strong>. Angiv en ny dato og begrundelse. En ansøgning ændrer ikke din tildeling, før administratoren godkender den.</p>
+<form method="post" action="/my-case/lease"><input type="hidden" name="csrf_token" value="{{ csrf }}">
+<div class="field"><label for="new_ends_on">Ønsket ny slutdato</label><input type="date" id="new_ends_on" name="new_ends_on" min="{{ today.isoformat() }}" required></div>
+<div class="field"><label for="reason">Begrundelse for forlængelse</label><textarea id="reason" name="reason" maxlength="1600" minlength="10" rows="3" required placeholder="Hvorfor skal miljøet bruges længere?"></textarea></div>
+<button class="button primary" type="submit">Send ansøgning om forlængelse</button></form>{% endif %}
+{% if case.lease_requests %}<h3>Tidligere forlængelsesanmodninger</h3><ul>{% for lease in case.lease_requests %}<li>{{ lease.proposed_ends_on|dkdate }} · {{ {'pending':'Afventer','approved':'Godkendt','rejected':'Afvist'}[lease.status] }}{% if lease.decision_note %} – {{ lease.decision_note }}{% endif %}</li>{% endfor %}</ul>{% endif %}
+</section>{% endif %}
 <div class="case-layout"><div>{% include 'case_summary.html' %}</div><section class="card timeline-card"><p class="eyebrow">SAGSFORLØB</p><h2>Hvad er der sket?</h2><div class="timeline">{% for item in events %}<article><span class="timeline-dot" aria-hidden="true"></span><time>{{ item.created_at|dkdate }}</time><h3>{{ actions.get(item.action, item.action) }}</h3>{% if item.public_note %}<p class="preline">{{ item.public_note }}</p>{% endif %}</article>{% endfor %}</div></section></div>{% endblock %}

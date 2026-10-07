@@ -18,7 +18,8 @@ ACTIONS = {
     "submitted": "Ansøgning modtaget", "review": "Behandling startet", "approve": "Godkendt",
     "reject": "Afvist", "activate": "Levering registreret", "close": "Sag afsluttet",
     "archive": "Arkiveret", "restore": "Hentet fra arkiv", "note": "Notat tilføjet",
-    "extend": "Tildelingsperiode forlænget", "status_code_reset": "Privat statuskode fornyet",
+    "extend": "Tildelingsperiode forlænget", "lease_requested": "Forlængelse ansøgt",
+    "lease_approved": "Forlængelse godkendt", "lease_rejected": "Forlængelse afvist", "status_code_reset": "Privat statuskode fornyet",
 }
 
 
@@ -39,6 +40,36 @@ def normalize_email(value: str) -> str:
     except (EmailNotValidError, AttributeError):
         raise ValueError("Indtast en gyldig e-mailadresse.") from None
 
+
+def parse_participants(value: str, primary_email: str, settings):
+    """Each line: student name ; student email ; class. Optional, up to 15 students."""
+    raw = text(value, 2400)
+    if not raw:
+        return []
+    lines = [line.strip() for line in raw.split("\n") if line.strip()]
+    if len(lines) > 15:
+        raise ValueError("Der kan højst tilknyttes 15 ekstra studerende.")
+    students, emails = [], {primary_email.lower()}
+    for index, line in enumerate(lines, start=1):
+        fields = [part.strip() for part in line.split(";")]
+        if len(fields) != 3:
+            raise ValueError(f"Linje {index}: Brug formatet Navn; e-mail; klasse.")
+        name, email, class_name = fields
+        if not 2 <= len(name) <= 120 or not 1 <= len(class_name) <= 60:
+            raise ValueError(f"Linje {index}: Angiv navn (2–120 tegn) og klasse (1–60 tegn).")
+        if any(ord(c) < 32 for c in name + class_name):
+            raise ValueError(f"Linje {index}: Ugyldige tegn.")
+        try:
+            email = normalize_email(email)
+        except ValueError as exc:
+            raise ValueError(f"Linje {index}: {exc}") from None
+        if email in emails:
+            raise ValueError(f"Linje {index}: E-mailadressen er allerede angivet.")
+        if settings.allowed_email_domains and email.split("@")[-1] not in settings.allowed_email_domains:
+            raise ValueError(f"Linje {index}: E-maildomænet er ikke tilladt.")
+        emails.add(email)
+        students.append({"name": name, "email": email, "class_name": class_name})
+    return students
 
 def validate_application(form: dict, settings, today: date):
     data, errors = {}, {}
@@ -69,6 +100,11 @@ def validate_application(form: dict, settings, today: date):
             raise ValueError("Brug en e-mailadresse fra: " + ", ".join(settings.allowed_email_domains))
     except ValueError as exc:
         errors["email"] = str(exc)
+    try:
+        data["participants"] = parse_participants(form.get("additional_students", ""), data.get("email", ""), settings)
+    except ValueError as exc:
+        errors["additional_students"] = str(exc)
+        data["participants"] = []
     field("title", 160, 3)
     field("purpose", 4000, 10)
     data.update(os_family=None, os_version=None, cpu_cores=None, ram_gib=None, storage_gib=None, access_scope=None)

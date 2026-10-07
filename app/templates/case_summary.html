@@ -1,5 +1,8 @@
 <section class="card detail-card"><div class="section-heading"><div><p class="eyebrow">ANSØGNINGENS OPLYSNINGER</p><h2>{{ case.title }}</h2></div></div>
 <dl class="detail-grid"><div><dt>Ansøger</dt><dd>{{ case.applicant_name }}</dd></div><div><dt>Tilknytning</dt><dd>{{ roles[case.applicant_role] }}{% if case.class_name %} · {{ case.class_name }}{% endif %}</dd></div><div><dt>E-mail</dt><dd>{{ case.email }}</dd></div><div><dt>Ønske</dt><dd>{{ request_types[case.request_type] }}</dd></div></dl>
+{% if case.participants %}<h3>Tilknyttede studerende ({{ case.participants|length }})</h3>
+<ul>{% for student in case.participants %}<li>{{ student.student_name }} · {{ student.student_email }} · {{ student.class_name }}</li>{% endfor %}</ul>
+<p class="hint">Tilknytning her er ikke automatisk adgang til Proxmox.</p>{% endif %}
 <h3>Formål</h3><p class="preline">{{ case.purpose }}</p>
 {% if case.request_type == 'vm' %}<div class="spec-strip"><div><strong>{{ case.cpu_cores }}</strong><span>vCPU</span></div><div><strong>{{ case.ram_gib }}</strong><span>GiB RAM</span></div><div><strong>{{ case.storage_gib }}</strong><span>GiB storage</span></div></div><p><strong>Operativsystem:</strong> {{ os_families[case.os_family] }} · {{ case.os_version }}</p>
 {% else %}<h3>Ønsket adgang</h3><p class="preline">{{ case.access_scope }}</p>{% endif %}

@@ -231,6 +231,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         public_events = [e for e in events if e["public_note"] or e["action"] in {"submitted", "review", "approve", "reject", "activate", "close", "extend"}]
         return render(request, "my_case.html", {"case": case, "events": public_events, "page_title": case["case_number"]})
 
+    @app.post("/my-case/lease")
+    def applicant_lease_request(request: Request):
+        case_id = request.state.session.status_case_id
+        if not case_id:
+            return error(request, "Åbn først sagen med sagsnummer og privat statuskode.", 403)
+        if not limit(request, "lease-request", 12, 3600):
+            return error(request, "For mange forsøg. Prøv senere.", 429)
+        try:
+            services.request_lease_extension(db, settings, case_id, request.state.form)
+        except services.CaseError as exc:
+            case, events = services.case_by_id(db, case_id, services.local_today(settings))
+            public_events = [e for e in events if e["public_note"] or e["action"] in
+                             {"submitted", "review", "approve", "reject", "activate", "close", "extend"}]
+            return render(request, "my_case.html", {"case": case, "events": public_events,
+                          "lease_error": exc.message, "page_title": case["case_number"]}, exc.status_code)
+        return RedirectResponse("/my-case?lease_submitted=1", status_code=303)
+
     @app.post("/status/forget")
     def forget_status(request: Request):
         sessions.grant_status(request.state.session, None)
@@ -293,8 +310,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return RedirectResponse("/admin/login", status_code=303)
         case, events = services.case_by_id(db, case_id, services.local_today(settings))
         done = request.query_params.get("done", "")
-        return render(request, "case.html", {"case": case, "events": events, "message": ACTIONS.get(done, ""),
+        return render(request, "case.html", {"case": case, "events": events, "message": "Forlængelsesanmodningen er behandlet" if done == "lease_decision" else ACTIONS.get(done, ""),
                                              "form_values": {}, "form_error": "", "page_title": case["case_number"]})
+
+    @app.post("/admin/cases/{case_id}/lease")
+    def admin_lease_decision(request: Request, case_id: int):
+        if not request.state.admin:
+            return error(request, "Log ind som administrator.", 403)
+        try:
+            services.decide_lease_extension(db, settings, case_id, request.state.admin, request.state.form)
+        except services.CaseError as exc:
+            case, events = services.case_by_id(db, case_id, services.local_today(settings))
+            return render(request, "case.html", {"case": case, "events": events, "message": "",
+                          "form_values": {}, "form_error": exc.message, "conflict": exc.status_code == 409,
+                          "page_title": case["case_number"]}, exc.status_code)
+        return RedirectResponse(f"/admin/cases/{case_id}?done=lease_decision", status_code=303)
 
     @app.post("/admin/cases/{case_id}/action")
     def admin_action(request: Request, case_id: int):

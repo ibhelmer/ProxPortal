@@ -1,5 +1,15 @@
 # Ændringslog
 
+## 1.2.0 — 7. oktober 2026
+
+- Tilføjet tydelig »Om og regler«-knap på forsiden og i navigationen med brugervejledning og forslag til lokale laboratorieregler.
+- Op til 15 ekstra studerende pr. ansøgning med navn, e-mail og klasse, med servervalidering og ny database-relation.
+- Ansøgeren kan anmode om forlængelse af lease med ny ønsket dato og begrundelse.
+- Administratoren kan godkende eller afvise anmodningen, og alle beslutninger registreres i historikken.
+- Ventende forlængelser markeres på administratoroversigten og blokerer modstridende direkte forlængelse/afslutning.
+- Migration 002 bevarer gamle sagsnumre, konti og historik. Funktionstests er kørt lokalt; produktionsopdatering kræver lokal accepttest.
+
+
 ## 1.1.1 — 7. oktober 2026
 
 - Rettet browserlogin og øvrige HTML-formularer, hvor `Referrer-Policy: no-referrer` fik Chromium til at sende `Origin: null` og udløste HTTP 403.
