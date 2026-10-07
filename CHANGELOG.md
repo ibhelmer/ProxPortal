@@ -1,5 +1,13 @@
 # Ændringslog
 
+## 1.1.1 — 7. oktober 2026
+
+- Rettet browserlogin og øvrige HTML-formularer, hvor `Referrer-Policy: no-referrer` fik Chromium til at sende `Origin: null` og udløste HTTP 403.
+- Svarheaderen ændret til `Referrer-Policy: same-origin`, så same-origin POST sender korrekt Origin uden referrer-oplysninger til andre domæner.
+- CSRF-token og afvisning af `Origin: null`/fremmede origins er bevaret og regressionstestet.
+- Eksisterende data og administratorkonti ændres ikke ved opgradering.
+
+
 ## 1.1.0 — 7. oktober 2026
 
 - Publicering som ProxPortal med samme ansøgnings- og sagsbehandlingsfunktioner.
