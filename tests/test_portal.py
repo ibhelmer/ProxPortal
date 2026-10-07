@@ -340,7 +340,7 @@ def test_disabling_admin_revokes_access_on_next_request(client, admin, db):
 def test_security_headers_and_cookie(client):
     response = client.get("/")
     assert response.headers["cache-control"] == "no-store"
-    assert response.headers["referrer-policy"] == "no-referrer"
+    assert response.headers["referrer-policy"] == "same-origin"
     assert response.headers["x-frame-options"] == "DENY"
     cookie = response.headers.get("set-cookie", "")
     assert "HttpOnly" in cookie and "SameSite=lax" in cookie
@@ -375,3 +375,19 @@ def test_password_hashing_policy(admin_hash):
     assert not verify_password("wrong password", admin_hash)
     with pytest.raises(ValueError):
         hash_password("short")
+
+
+def test_referrer_policy_and_origin_validation_for_html_form(client, settings):
+    # Referrer-Policy: no-referrer causes browsers to send Origin: null for form POSTs.
+    # same-origin retains an actual Origin for on-site HTTPS forms without sharing
+    # referrers with other sites. CSRF token and exact Origin validation remain active.
+    page = client.get("/admin/login")
+    assert page.status_code == 200
+    assert page.headers["referrer-policy"] == "same-origin"
+    token = hidden(page.text, "csrf_token")
+    data = {"csrf_token": token, "email": "missing@example.org", "password": "invalid"}
+    assert client.post("/admin/login", data=data, headers={"Origin": "null"}).status_code == 403
+    assert client.post("/admin/login", data=data, headers={"Origin": "https://evil.example"}).status_code == 403
+    valid = client.post("/admin/login", data=data, headers={"Origin": settings.public_base_url})
+    assert valid.status_code == 403  # Invalid credentials, not the Origin check.
+    assert "E-mail eller adgangskode er forkert" in valid.text
