@@ -1,4 +1,4 @@
-# ProxPortal 1.1.0
+# ProxPortal 1.1.1
 
 **Webbaseret ansøgning, godkendelse og arkivering af virtuelle undervisningsmiljøer.**
 
